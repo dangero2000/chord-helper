@@ -106,7 +106,7 @@ jobs:
         run: |
           uv run python -m nuitka `
             --onefile `
-            --include-package-data=sounddevice `
+            --include-package-data=_sounddevice_data `
             --include-package-data=prism `
             --windows-console-mode=force `
             --output-filename=chords `
@@ -117,7 +117,6 @@ jobs:
         run: |
           uv run python -m nuitka \
             --onefile \
-            --include-package-data=sounddevice \
             --include-package-data=prism \
             --output-filename=chords \
             main.py
