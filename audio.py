@@ -1,12 +1,14 @@
 """Chord audio synthesis using additive synthesis."""
 
 import threading
+import wave as wave_mod
+from pathlib import Path
+
 import numpy as np
 import sounddevice as sd
 
 SAMPLE_RATE = 44100
 _playback_lock = threading.Lock()
-_stop_event = threading.Event()
 
 
 # MIDI note 60 = middle C (C4) = 261.63 Hz
@@ -125,7 +127,6 @@ def play_chord(root_idx: int, intervals: list[int], instrument: str, duration: f
 
     def _play():
         with _playback_lock:
-            _stop_event.clear()
             sd.play(mix, SAMPLE_RATE)
             sd.wait()
 
@@ -135,8 +136,6 @@ def play_chord(root_idx: int, intervals: list[int], instrument: str, duration: f
 
 def play_wav(path) -> bool:
     """Play a WAV file asynchronously. Returns False if the file can't be read."""
-    import wave as wave_mod
-    from pathlib import Path
     try:
         with wave_mod.open(str(path), "rb") as f:
             n_channels  = f.getnchannels()

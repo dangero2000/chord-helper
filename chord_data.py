@@ -29,10 +29,6 @@ CHORD_TYPES = [
     ("power chord",     [0, 7]),
 ]
 
-def get_chord_notes(root_idx: int, intervals: list[int]) -> list[int]:
-    """Return MIDI pitch indices (0-11) for each note in the chord."""
-    return [(root_idx + i) % 12 for i in intervals]
-
 def chord_note_names(root_idx: int, intervals: list[int]) -> list[str]:
     return [NOTES[(root_idx + i) % 12] for i in intervals]
 
@@ -222,29 +218,6 @@ def _ordinal(n: int) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Piano voicings – just list the note names in the chord (root position)
-# plus any common inversions.
-# ---------------------------------------------------------------------------
-
-def piano_voicings(root_idx: int, chord_type_name: str, intervals: list[int]) -> list[tuple[str, str]]:
-    """Return list of (label, description) for piano."""
-    note_names = chord_note_names(root_idx, intervals)
-    root_pos = ", ".join(note_names)
-    results = [("Root position", f"Play: {root_pos}")]
-
-    if len(intervals) >= 3:
-        # First inversion: move lowest note up an octave
-        inv1 = note_names[1:] + [note_names[0] + " (octave up)"]
-        results.append(("First inversion", f"Play: {', '.join(inv1)}"))
-
-        # Second inversion
-        inv2 = note_names[2:] + [note_names[0] + " (octave up)", note_names[1] + " (octave up)"]
-        results.append(("Second inversion", f"Play: {', '.join(inv2)}"))
-
-    return results
-
-
-# ---------------------------------------------------------------------------
 # Ukulele voicings (G4 C4 E4 A4 tuning, low→high)
 # ---------------------------------------------------------------------------
 
@@ -296,9 +269,3 @@ def ukulele_voicing_description(voicing: list) -> str:
     return ", ".join(parts)
 
 
-def get_guitar_voicings(note_symbol: str, chord_type: str) -> list[tuple[str, list]] | None:
-    return GUITAR_VOICINGS.get((note_symbol, chord_type))
-
-
-def get_ukulele_voicings(note_symbol: str, chord_type: str) -> list[tuple[str, list]] | None:
-    return UKULELE_VOICINGS.get((note_symbol, chord_type))

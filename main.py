@@ -8,7 +8,7 @@ import accessibility
 import audio
 import data_loader
 from audio import INSTRUMENTS as _SYNTH_INSTRUMENTS
-from chord_data import NOTES, NOTE_SYMBOLS, CHORD_TYPES
+from chord_data import NOTES, NOTE_SYMBOLS, CHORD_TYPES, chord_note_names
 
 # ── Instrument list ───────────────────────────────────────────────────────────
 # Prefer instruments discovered from the data folder; fall back to the built-in
@@ -112,7 +112,7 @@ def on_right():
     global note_idx
     if in_submenu:
         return
-    if note_idx < 11:
+    if note_idx < len(NOTES) - 1:
         note_idx += 1
         announce_current_chord()
 
@@ -279,7 +279,6 @@ def draw(screen, font_large, font_med, font_small):
     surf = font_med.render(current_instrument(), True, FG)
     screen.blit(surf, surf.get_rect(centerx=w // 2, y=110))
 
-    from chord_data import chord_note_names
     note_names = chord_note_names(note_idx, current_intervals())
     surf = font_small.render("Notes: " + ",  ".join(note_names), True, DIM)
     screen.blit(surf, surf.get_rect(centerx=w // 2, y=165))

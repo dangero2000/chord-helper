@@ -18,9 +18,3 @@ dev = [
     "nuitka>=4.0.7",
 ]
 
-[tool.nuitka]
-standalone = true
-onefile = true
-windows-console-mode = "force"
-output-filename = "chords"
-include-data-files = []
