@@ -106,12 +106,10 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          $prism_native = uv run python -c "import importlib.util; s=importlib.util.find_spec('prism'); print(s.submodule_search_locations[0] + '/_native')"
           uv run python -m nuitka `
             --standalone `
             --assume-yes-for-downloads `
             --include-package-data=_sounddevice_data `
-            "--include-data-dir=$prism_native=prism/_native" `
             --windows-console-mode=force `
             --output-filename=chords `
             --output-dir=dist `
@@ -120,10 +118,8 @@ jobs:
       - name: Build (Unix)
         if: runner.os != 'Windows'
         run: |
-          PRISM_NATIVE=$(uv run python -c "import importlib.util; s=importlib.util.find_spec('prism'); print(s.submodule_search_locations[0] + '/_native')")
           uv run python -m nuitka \
             --standalone \
-            --include-data-dir="$PRISM_NATIVE=prism/_native" \
             --output-filename=chords \
             --output-dir=dist \
             main.py
@@ -132,12 +128,18 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
+          $prism_native = uv run python -c "import importlib.util; s=importlib.util.find_spec('prism'); print(s.submodule_search_locations[0] + '/_native')"
+          New-Item -ItemType Directory -Force dist/main.dist/prism/_native | Out-Null
+          Copy-Item "$prism_native/*" dist/main.dist/prism/_native/
           Copy-Item -Recurse data dist/main.dist/data
           Compress-Archive -Path dist/main.dist/* -DestinationPath chords-windows.zip
 
       - name: Package (Unix)
         if: runner.os != 'Windows'
         run: |
+          PRISM_NATIVE=$(uv run python -c "import importlib.util; s=importlib.util.find_spec('prism'); print(s.submodule_search_locations[0] + '/_native')")
+          mkdir -p dist/main.dist/prism/_native
+          cp -r "$PRISM_NATIVE/." dist/main.dist/prism/_native/
           cp -r data/ dist/main.dist/data
           zip -r chords-${{ matrix.platform }}.zip dist/main.dist/
 
