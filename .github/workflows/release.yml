@@ -75,6 +75,7 @@ jobs:
     permissions:
       contents: write
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -106,6 +107,7 @@ jobs:
         run: |
           uv run python -m nuitka `
             --onefile `
+            --assume-yes-for-downloads `
             --include-package-data=_sounddevice_data `
             --include-package-data=prism `
             --windows-console-mode=force `
