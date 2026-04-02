@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environment
+.venv/
+
+# Nuitka build output
+*.dist/
+*.onefile-build/
+
+# Claude Code
+.claude/
