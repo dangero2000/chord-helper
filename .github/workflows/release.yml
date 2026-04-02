@@ -120,8 +120,10 @@ jobs:
       - name: Build (Unix)
         if: runner.os != 'Windows'
         run: |
+          PRISM_NATIVE=$(uv run python -c "import importlib.util; s=importlib.util.find_spec('prism'); print(s.submodule_search_locations[0] + '/_native')")
           uv run python -m nuitka \
             --standalone \
+            --include-data-dir="$PRISM_NATIVE=prism/_native" \
             --output-filename=chords \
             --output-dir=dist \
             main.py
