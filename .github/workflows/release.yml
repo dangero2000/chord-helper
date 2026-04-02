@@ -5,10 +5,13 @@ on:
     branches: [main]
 
 jobs:
-  release:
+  version:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release: ${{ steps.version.outputs.release }}
 
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +30,7 @@ jobs:
           elif echo "$MSG" | grep -qiE "^fix:"; then
             BUMP=patch
           else
-            echo "No release prefix found — skipping release."
+            echo "No release prefix found - skipping release."
             echo "release=false" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -65,3 +68,70 @@ jobs:
           git tag "$VERSION"
           git push origin "$VERSION"
           gh release create "$VERSION" --title "$VERSION" --generate-notes
+
+  build:
+    needs: version
+    if: needs.version.outputs.release == 'true'
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: macos-latest
+            platform: macos
+          - os: ubuntu-latest
+            platform: linux
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Install system deps (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libportaudio2 patchelf
+
+      - name: Install system deps (macOS)
+        if: runner.os == 'macOS'
+        run: brew install portaudio
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          uv run python -m nuitka `
+            --onefile `
+            --include-package-data=sounddevice `
+            --include-package-data=prism `
+            --windows-console-mode=force `
+            --output-filename=chords `
+            main.py
+
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          uv run python -m nuitka \
+            --onefile \
+            --include-package-data=sounddevice \
+            --include-package-data=prism \
+            --output-filename=chords \
+            main.py
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: Compress-Archive -Path chords.exe, data -DestinationPath chords-windows.zip
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: zip -r chords-${{ matrix.platform }}.zip chords data/
+
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ needs.version.outputs.version }} chords-${{ matrix.platform }}.zip
