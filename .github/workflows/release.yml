@@ -104,12 +104,14 @@ jobs:
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
+        shell: powershell
         run: |
+          $prism_native = uv run python -c "import prism, os; print(os.path.join(os.path.dirname(prism.__file__), '_native'))"
           uv run python -m nuitka `
             --standalone `
             --assume-yes-for-downloads `
             --include-package-data=_sounddevice_data `
-            --include-package-data=prism `
+            "--include-data-dir=$prism_native=prism/_native" `
             --windows-console-mode=force `
             --output-filename=chords `
             --output-dir=dist `
@@ -118,9 +120,10 @@ jobs:
       - name: Build (Unix)
         if: runner.os != 'Windows'
         run: |
+          PRISM_NATIVE=$(uv run python -c "import prism, os; print(os.path.join(os.path.dirname(prism.__file__), '_native'))")
           uv run python -m nuitka \
             --standalone \
-            --include-package-data=prism \
+            --include-data-dir="$PRISM_NATIVE=prism/_native" \
             --output-filename=chords \
             --output-dir=dist \
             main.py
